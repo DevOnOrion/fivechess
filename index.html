@@ -1,0 +1,198 @@
+<!doctype html>
+<!-- 声明当前文档的类型是html5 规范 -->
+<html>
+	<head>
+		<meta charset="UTF-8">
+			<!-- 声明当前页面的编码集 -->
+			<meta name="Keywords" content="关键词，关键字">
+				<!-- seo优化 搜索引擎优化 做开发不等于写代码 -->
+				<meta name="Description" content="描述信息">
+					<title>人工智能五子棋 - 蓝桥老师</title>
+					<!-- css样式 层叠样式表 一件美丽的外衣 -->
+					<style>
+		*{margin:0;}/*解决浏览器的兼容性
+						margin:四个方向;
+						margin:上下 左右;
+						margin:上 左右 下;
+						margin:上 右 下 左;
+					*/
+		canvas{background:#fff;margin:100px auto;display:block;border-radius:5px;box-shadow:0px 0px 10px #000;}
+					</style>
+				</head>
+				<body>
+
+					<!-- canvas 画布 画画的本子 -->
+					<canvas width="450" height="450" id="canvas"/>
+
+					<!-- js Javascript 画笔 HTML5 -->
+					<script>
+					
+					var over=false;
+
+			var chess=document.getElementById("canvas");
+			var context=chess.getContext("2d");
+			//绘制线条的颜色
+			context.strokeStyle="#9d9d9d";
+
+			//绘制棋盘的方法
+			var drawChessboard=function(){
+				for(var i=0;i<15;i++){
+				context.moveTo(i*30+15,15);//起点
+				context.lineTo(i*30+15,435);//终点
+				context.stroke();
+				context.moveTo(15,i*30+15);//起点
+				context.lineTo(435,i*30+15);//终点
+				context.stroke();
+			}
+			}
+
+			drawChessboard();
+			
+			//绘制棋子 圆形 圆心 半径
+			var onStep=function(i,j,me){
+				//context.arc(圆心x坐标，圆心Y坐标，半径，起始位置，终点位置π);
+				context.beginPath();//开始路径
+				context.arc(i*30+15,j*30+15,13,0,Math.PI*2);
+				context.closePath();//结束路径
+				//设置渐变色 径向渐变
+				var gradient = context.createRadialGradient(i*30+15+2,j*30+15-2,0,i*30+15,j*30+15,13);
+				if(me){
+					gradient.addColorStop(0,'#636767');
+					gradient.addColorStop(1,'#0a0a0a');
+				}else{
+					gradient.addColorStop(0,'#f9f9f9');
+					gradient.addColorStop(1,'#d1d1d1');
+				}
+				
+				context.fillStyle=gradient;
+				context.fill();
+			}
+			
+			var me=true;
+			//定义一个数组判断棋盘上面所有的情况(15*15)
+			var chessBoard=[];
+			//二维棋盘全部赋0
+			for(var i=0;i<15;i++){
+				chessBoard[i]=[];
+				for(var j=0;j<15;j++){
+					chessBoard[i][j]=0;//0代表了没有下棋子
+				}
+			}
+			
+			//下棋的方法
+			chess.onclick=function(e){
+				//游戏结束不执行
+				if(over){
+					return;
+				}
+				//非本人执棋阶段不执行
+				//if(!me){
+				//	return;
+				//}
+				//获取鼠标的坐标
+				var x=e.offsetX;
+				var y=e.offsetY;
+				var i=Math.floor(x/30);
+				var j=Math.floor(y/30);	
+				if(chessBoard[i][j]==0){
+				//填充色并赋1
+					onStep(i,j,me);
+					chessBoard[i][j]==1;
+					
+					
+					for(var k=0;k<count;k++){
+						if(wins[i][j][k]){
+							if(me){
+								myWins[k]++;
+							}else{
+								computerWins[k]++;
+							}
+							if(myWins[k]==5){
+								alert("恭喜你，你赢了");
+								over=true;
+							}
+							if(computerWins[k]==5){
+								alert("很遗憾，AI战胜了您");
+								over=true;
+							}
+						}
+					}
+					
+					if(!over){
+						me=!me;
+						computerAI();
+					}
+				}
+			}
+			
+			//赢法数组
+			var wins=[];
+			var count=0;//赢法的索引
+			for(var i=0;i<15;i++){
+				wins[i]=[];
+				for(var j=0;j<15;j++){
+					wins[i][j]=[];
+				}
+			}
+			
+			//横线赢的算法
+			for(var i=0;i<15;i++){
+				for(var j=0;j<11;j++){
+					for(var k=0;k<5;k++){
+						wins[i][j+k][count]=true;
+					}
+					count++;
+				}
+			}
+			
+			//竖线赢的算法
+			for(var i=0;i<15;i++){
+				for(var j=0;j<11;j++){
+					for(var k=0;k<5;k++){
+						wins[j+k][i][count]=true;
+					}
+					count++;
+				}
+			}
+			
+			//斜线赢的算法
+			for(var i=0;i<11;i++){
+				for(var j=0;j<11;j++){
+					for(var k=0;k<5;k++){
+						wins[i+k][j+k][count]=true;
+					}
+					count++;
+				}
+			}
+			
+			//反斜线赢的算法
+			for(var i=0;i<11;i++){
+				for(var j=14;j>3;j--){
+					for(var k=0;k<5;k++){
+						wins[i+k][j-k][count]=true;
+					}
+					count++;
+				}
+			}
+			
+			//572种赢的方法
+			console.log(count);//572
+			
+			//赢法统计数组
+			var myWins=[];
+			var computerWins=[];
+			for(var i=0;i<count;i++){
+				myWins[i]=0;
+				computerWins[i]=0;
+			}
+			
+			//计算机的AI算法
+			var computerAI=function(){
+
+				onStep(i,j,me);
+			}
+
+							</script>
+
+						</body>
+						<html>
